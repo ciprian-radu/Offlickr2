@@ -395,13 +395,25 @@ class Offlickr2 {
    */
 
   private function get_photo_list() {
-    $this->dialog->info(0, "Getting photo list" . ($this->backup_photos_limit > 0 ? ' (' . $this->backup_photos_limit .' max)' : ''));
+    $min_upload_date = $this->get_timestamp();
+    $since = "always";
+    if ($min_upload_date != null) {
+      $since = $min_upload_date;
+    }
+    $this->dialog->info(0, "Getting photo list since $since" . ($this->backup_photos_limit > 0 ? ' (' . $this->backup_photos_limit .' max)' : ''));
     $page = 1;
     while(true) {
       $this->dialog->info(2, "Setting photos list page $page");
-      $photos = $this->phpflickr->photos_search(array("user_id"=>$this->flickr_id,
-                                                      "page"=>$page,
-                                                      "per_page"=>FLICKR_MAX_PER_PAGE));
+      $search_params = array("user_id"=>$this->flickr_id,
+                             "page"=>$page,
+                             "per_page"=>FLICKR_MAX_PER_PAGE);
+      if ($min_upload_date != null) {
+        $search_params = array("user_id"=>$this->flickr_id,
+                               "page"=>$page,
+                               "per_page"=>FLICKR_MAX_PER_PAGE,
+                               "min_upload_date"=>$min_upload_date);
+      }
+      $photos = $this->phpflickr->photos_search($search_params);
       if (count($photos['photo']) == 0) {
         break;
       }
@@ -416,6 +428,21 @@ class Offlickr2 {
       $page += 1;
     }
     $this->dialog->info(0, "Found: " . count($this->photo_list) . " photo(s)");
+  }
+
+  /**
+   * Get timestamp since when photos should be backed up.
+   */
+
+  private function get_timestamp() {
+    if (file_exists("./timestamp.json")) {
+      $timestampfile = file_get_contents("./timestamp.json");
+      $json = json_decode($timestampfile, true);
+
+      return $json['timestamp'];
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -547,6 +574,9 @@ class Offlickr2 {
     }
     $this->phpflickr->setToken($token);
 
+    $new_min_upload_date = date('Y-m-d H:i:s');
+    $this->dialog->info(1, "Backup started at $new_min_upload_date");
+
     // Do the backup
     if ($this->backup_all_photos) {
       $this->get_photo_list();
@@ -556,6 +586,18 @@ class Offlickr2 {
       $this->get_set_list();
     }
     $this->backup_sets();
+    
+    $this->save_timestamp($new_min_upload_date);
+  }
+
+  private function save_timestamp($new_min_upload_date) {
+    $timestamp['timestamp'] = $new_min_upload_date;
+
+    $fp = fopen('./timestamp.json', 'w');
+    fwrite($fp, json_encode($timestamp));
+    fclose($fp);
+    
+    $this->dialog->info(1, "The next backup will start from upload time $new_min_upload_date");
   }
 
   /**
