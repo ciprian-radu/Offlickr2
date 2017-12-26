@@ -262,23 +262,28 @@ class Offlickr2 {
       $max_size = 0;
       // Find the right source URL
       $media = $local_media->get_media_type();
+      $usedLabel;
       foreach(array_reverse($photo_size) as $size) {
         if ($size['media'] != $media) {
           $this->dialog->info(3, "Skipping " . $size['label'] . ": wrong media (" . $size['media'] . ")");
           continue;
         }
         $this->dialog->info(3, "Found " . $size['label'] . " for " . $size['media'] . " media");
-        if (in_array($size['label'], array('Original', 'Video Original'))) {
-          // We found the original
-          $source_url =  $size['source'];
-          break;
-        }
+        //if (in_array($size['label'], array('Original', 'Video Original'))) {
+        //  // We found the original
+        //  $source_url =  $size['source'];
+        //  break;
+        //}
         $ps = $size['height'] * $size['width'];
         if ($max_size < $ps) {
           $source_url =  $size['source'];
+          $usedLabel = $size['label'];
           $max_size = $ps;
         }
       }
+      //if ($local_media->is_video()) {
+      //  $source_url = "https://www.flickr.com/video_download.gne?id=" . $photo_id;
+      //}
       if ($source_url == false) {
         $this->dialog->error("Could not find source URL");
         $this->dialog->dump_var(4, "Flickr response", $this->phpflickr->parsed_response);
@@ -286,6 +291,7 @@ class Offlickr2 {
       }
       $this->dialog->info(2, "Downloading " . $media . " binary to " . $local_media->get_data_filename(LocalMedia::BINARY, true));
       $this->dialog->info(2, "Binary source is " . $source_url);
+      $this->dialog->info(2, "Using video type " . $usedLabel);
       $fp = fopen($local_media->get_data_filename(LocalMedia::BINARY, true), "w");
       curl_setopt($this->curl, CURLOPT_URL, $source_url);
       curl_setopt($this->curl, CURLOPT_FILE, $fp);
