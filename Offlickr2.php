@@ -588,7 +588,7 @@ class Offlickr2 {
       $this->get_photo_list();
     }
     $this->backup_photos();
-    if ($this->backup_all_sets) {
+    if (property_exists($this, "backup_all_sets") && $this->backup_all_sets) {
       $this->get_set_list();
     }
     $this->backup_sets();
