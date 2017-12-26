@@ -5,8 +5,8 @@ require_once(__DIR__.'/Dialog.php');
 require_once(__DIR__.'/LocalStorage.php');
 require_once(__DIR__.'/version.php');
 
-define('FLICKR_APPID', 'c538ec60d29c939f35461ef134d6d579');
-define('FLICKR_SECRET', '84c560c121f79fdd');
+define('FLICKR_APPID', '75bb40b9f31129df5bd91ec1bac3d914');
+define('FLICKR_SECRET', '9ac832910f7cd31b');
 define("FLICKR_MAX_PER_PAGE", 500);
 define('DEFAULT_AUTH_FILE', getenv("HOME") . '/.offlickr2.auth.ini');
 define('CONFIG_ACCESS_TOKEN', 'access_token');
