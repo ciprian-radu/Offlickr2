@@ -34,6 +34,7 @@ class Offlickr2 {
   private $local_checks = false;
   private $photo_list = array();
   private $set_list = array();
+  private $save_timestamp = true;
 
   /**
    * Help
@@ -303,6 +304,11 @@ class Offlickr2 {
         $this->dialog->error("Could not download binary");
         return false;
       }
+      $http_status_code = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
+      $this->dialog->info(2, "HTTP status code: " . $http_status_code);
+      if (200 != $http_status_code) {
+        return false;
+      }
       fclose($fp);
       if ($local_media->is_video()) {
         // Now that we have the video, find out about the extension
@@ -488,11 +494,14 @@ class Offlickr2 {
       }
       $this->dialog->info(0, "Done with backup");
       if (count($errors) > 0) {
+        $this->save_timestamp = false;
         $this->dialog->error("Could not backup some $what(s): " . implode(' ', $errors));
         if ($retry) {
           $this->dialog->info(0, "Retrying for $what(s) which had errors...");
           $this->backup_items($errors, $what, $backup_function, false);
         }
+      } else {
+        $this->save_timestamp = true;
       }
     } else {
       $this->dialog->info(0, "No $what to backup");
@@ -593,7 +602,11 @@ class Offlickr2 {
     }
     $this->backup_sets();
     
-    $this->save_timestamp($new_min_upload_date);
+    if ($this->save_timestamp) {
+      $this->save_timestamp($new_min_upload_date);
+    } else {
+      $this->dialog->info(1, "The next backup will start from the same timestamp because there where errors!");
+    }
   }
 
   private function save_timestamp($new_min_upload_date) {
