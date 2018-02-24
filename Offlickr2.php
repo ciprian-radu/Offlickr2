@@ -228,10 +228,10 @@ class Offlickr2 {
         $local_media = $this->local_storage->local_media_factory($photo_info);
         if ($local_media->is_backed_up()) {
           $already_backed_up = true;
-        }
-      } else {
-        if ($this->local_storage->does_photo_seem_backed_up($photo_id)) {
-          $already_backed_up = true;
+        } else {
+          if ($this->local_storage->does_photo_seem_backed_up($photo_id)) {
+            $already_backed_up = true;
+          }
         }
       }
 
